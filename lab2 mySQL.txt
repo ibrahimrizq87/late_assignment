@@ -1,0 +1,208 @@
+1.
+ALTER TABLE student
+ADD gender ENUM('male', 'female');
+
+
+2.
+ALTER TABLE student
+ADD birth_date DATE;
+
+
+3.
+ALTER TABLE student
+DROP COLUMN name,
+ADD COLUMN first_name VARCHAR(50),
+ADD COLUMN last_name VARCHAR(50);
+
+
+4.
+ALTER TABLE Exam
+ADD CONSTRAINT fk_student
+FOREIGN KEY (studentID) REFERENCES Student(studentID)
+ON DELETE CASCADE;
+
+
+ALTER TABLE Exam
+ADD CONSTRAINT fk_subject
+FOREIGN KEY (subjectID) REFERENCES Subject(subjectID)
+ON DELETE CASCADE;
+
+
+
+
+5.
+UPDATE Student
+SET gender = 'male', birth_date = '2000-01-01', first_name = 'Ibrahim', last_name = 'Rizq' , Email = 'ibrahim@gmail.com',track_id = 1
+WHERE id = 1; 
+
+
+6.
+Did not understand the general Idea so did't do it sorry.
+
+
+7.
+SELECT * FROM Student;
+
+
+
+8.
+SELECT * FROM Student
+WHERE gender = 'male';
+
+
+
+9.
+SELECT COUNT(*) AS female_count
+FROM Student
+WHERE gender = 'female';
+
+
+
+
+10.
+SELECT * FROM Student
+WHERE gender = 'male' AND birth_date < '1991-10-01';
+
+
+
+11.
+SELECT subjectID, MAX(score) AS max_score
+FROM Exam
+GROUP BY subjectID;
+
+
+
+12.
+SELECT subjectID, MAX(score) AS max_score
+FROM Exam
+GROUP BY subjectID
+ORDER BY max_score DESC
+LIMIT 1;
+
+
+
+13.
+SELECT * FROM student
+WHERE first_name LIKE 'A%';
+
+
+
+14.
+SELECT COUNT(*) AS mohammed_count
+FROM Student
+WHERE first_name = 'Mohammed';
+
+
+
+15.
+SELECT gender, COUNT(*) AS count
+FROM Student
+GROUP BY gender;
+
+
+16.
+SELECT first_name, COUNT(*) AS count
+FROM student
+GROUP BY first_name
+HAVING count > 2;
+
+
+
+17.
+CREATE VIEW student_tracks AS
+SELECT Student.first_name, Student.last_name, Track.name AS track_name
+FROM Student
+JOIN Track ON Student.trackID = Track.track_id;
+
+
+
+18.
+CREATE VIEW subject_tracks AS
+SELECT  
+    Track.name AS track_name,
+    Subject.name AS subject_name
+FROM 
+    Student
+JOIN 
+    Track ON Student.trackID = Track.track_id
+JOIN 
+    StudentSubject ON Student.studentID = StudentSubject.studentID
+JOIN 
+    Subject ON StudentSubject.subjectID = Subject.subjectID;
+
+
+
+19.
+CREATE VIEW subject_tracks AS
+SELECT  
+    Student.first_name, 
+    Student.last_name, 
+    Subject.name AS subject_name
+FROM 
+    Student
+JOIN 
+    StudentSubject ON Student.studentID = StudentSubject.studentID
+JOIN 
+    Subject ON StudentSubject.subjectID = Subject.subjectID;
+
+
+
+
+
+20.
+CREATE VIEW student_scores AS
+SELECT  
+    Student.first_name, 
+    Student.last_name, 
+    Exam.score AS student_score,
+    Subject.name AS subject_name
+FROM 
+    Student
+JOIN 
+    StudentSubject ON Student.studentID = StudentSubject.studentID
+JOIN 
+    Subject ON StudentSubject.subjectID = Subject.subjectID
+JOIN
+    Exam ON Exam.subjectID = Subject.subjectID AND Exam.studentID = Student.studentID;
+
+    
+   
+   you have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'VIEW SubjectMaxScores AS
+	SELECT 
+    Subject.name AS subject_name, 
+    MAX(Exam' at line 1
+21.
+CREATE TEMPORARY VIEW SubjectMaxScores AS
+SELECT 
+    Subject.name AS subject_name, 
+    MAX(Exam.score) AS max_score
+FROM 
+    Subject
+JOIN 
+    Exam ON Subject.subjectID= Exam.subjectID
+GROUP BY 
+    Subject.subjectID;
+    
+    
+    the code above did not work for some resone. When I did search about it some resources sayes that some versions of mysql dose not support this kind of command so i did the following insted 
+    
+CREATE TEMPORARY TABLE SubjectMaxScores AS
+SELECT 
+    Subject.name AS subject_name, 
+    MAX(Exam.score) AS max_score
+FROM 
+    Subject
+JOIN 
+    Exam ON Subject.subjectID = Exam.subjectID
+GROUP BY 
+    Subject.subjectID;
+
+
+
+22.
+DELETE FROM Student
+WHERE studentID IN (
+    SELECT studentID
+    FROM Exam
+    WHERE score < 50
+);

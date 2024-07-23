@@ -1,0 +1,250 @@
+START TRANSACTION;
+
+INSERT INTO Student (studentID,first_name,second_name,Email,track_id, birthdate)
+VALUES (7,'kamal','Ali', 'kamal@gmail.com',3, '2008-05-12');
+
+INSERT INTO Exam_Scores (examID,studentD, subjectD, score,date)
+VALUES 
+(7, 7,3, 85,'2024-07-22');
+
+
+COMMIT;
+
+
+
+2.
+SELECT DATE_FORMAT(ExamDate, '%d %M %Y') AS exam_date
+FROM Exam;
+
+
+
+3.
+SELECT first_name, 
+       FLOOR(DATEDIFF(CURDATE(), birth_date) / 365.25) AS age
+FROM Student;
+
+
+4.
+SELECT Student.first_name,  
+       ROUND(Exam.score) AS rounded_score
+FROM Student
+JOIN Exam ON Student.studentID = Exam.studentID;
+
+
+5.
+SELECT first_name, 
+       YEAR(birth_date) AS birth_year
+FROM Student;
+
+6.
+INSERT INTO Exam (examID, studentID,subjectID, score, ExamDate)
+VALUES (6,1,2, 87.5, NOW());
+
+
+7.
+DELIMITER //
+
+CREATE FUNCTION HelloWorld(name VARCHAR(100))
+RETURNS VARCHAR(200)
+DETERMINISTIC
+BEGIN
+    RETURN CONCAT('Hello ', name, ', welcome to our system!');
+END //
+
+DELIMITER ;
+
+
+SELECT HelloWorld('Ibrahim');
+
+
+
+8.
+DELIMITER #
+
+CREATE FUNCTION MultiplyNumbers(num1 DECIMAL(10,2), num2 DECIMAL(10,2))
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    RETURN num1 * num2;
+END #
+
+DELIMITER ;
+
+::::calling::::
+SELECT MultiplyNumbers(5.5, 3.2);
+
+-------------------------------------------------------------------------
+DELIMITER #
+
+CREATE FUNCTION MultiplyNumbers(num1 INT, num2 INT)
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    RETURN num1 * num2;
+END #
+
+DELIMITER ;
+
+
+::::calling::::
+SELECT MultiplyNumbers(5, 3);
+
+
+9.
+	DELIMITER #
+
+	CREATE FUNCTION findStudentScore(studentID INT , examID)
+	RETURNS INT
+	DETERMINISTIC
+	BEGIN
+	    DECLARE score INT;
+	    SELECT Exam.score INTO score
+	    FROM Exam
+	    WHERE studentID = studentID AND examID = ExamID;
+	    RETURN score;
+	END #
+
+	DELIMITER ;
+	
+10.
+DELIMITER #
+
+CREATE FUNCTION findfailedStudent(examID INT)
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE num INT;
+    SELECT COUNT(Exam.studentID) INTO num
+    FROM Exam
+    WHERE Exam.ExamID = examID AND Exam.score < 50;
+    RETURN num;
+END #
+
+DELIMITER ;
+
+
+11.
+
+DELIMITER #
+
+CREATE FUNCTION averageMaxScore(subject VARCHAR(50))
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE num INT;
+    SELECT AVG(Subject.MaxScore) INTO num
+    FROM Subject
+    WHERE Subject.Name = subject;
+    RETURN num;
+END #
+
+DELIMITER ;
+
+
+12.
+through research I found a way to create a Table with the same structure as another table, and it is as following:
+
+CREATE TABLE Deleted_Students AS
+SELECT *
+FROM Student
+WHERE 1 = 0;
+
+here the "where 1=0" is always equal to False and that means no data will be retyrned using this query only the columns
+
+
+13.
+DELIMITER //
+
+CREATE TRIGGER before_student_delete
+BEFORE DELETE ON Student
+FOR EACH ROW
+BEGIN
+    INSERT INTO Deleted_Students (studentID, first_name, last_name, birth_date, Address, gender, Email, trackID)
+    VALUES (OLD.studentID, OLD.first_name, OLD.last_name, OLD.birth_date, OLD.Address, OLD.gender, OLD.Email, OLD.trackID);
+END //
+
+DELIMITER ;
+
+
+14.
+create backup_students table:
+CREATE TABLE backup_students AS
+SELECT *
+FROM Student
+WHERE 1 = 0;
+
+
+DELIMITER //
+
+CREATE TRIGGER after_student_add
+AFTER INSERT ON Student
+FOR EACH ROW
+BEGIN
+    INSERT INTO backup_students (studentID, first_name, last_name, birth_date, Address, gender, Email, trackID)
+    VALUES (NEW.studentID, NEW.first_name, NEW.last_name, NEW.birth_date, NEW.Address, NEW.gender, NEW.Email, NEW.trackID);
+END //
+
+DELIMITER ;
+
+
+
+15.(Bonus)
+for example lets create the contact info table:
+CREATE TABLE Contact_Info (
+    contactID INT PRIMARY KEY,
+    name VARCHAR(100),
+    phone VARCHAR(20),
+    email VARCHAR(100)
+);
+
+then create a table to save the log data on :
+CREATE TABLE Change_Log (
+    logID INT AUTO_INCREMENT PRIMARY KEY,
+    action_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    action_description VARCHAR(255)
+);
+create trigger for adding new record:
+DELIMITER //
+
+CREATE TRIGGER after_contact_insert
+AFTER INSERT ON Contact_Info
+FOR EACH ROW
+BEGIN
+    INSERT INTO Change_Log (action_description)
+    VALUES (CONCAT('Added new contact: ID = ', NEW.contactID, ', Name = ', NEW.name, ', Phone = ', NEW.phone, ', Email = ', NEW.email));
+END //
+
+DELIMITER ;
+
+create new trigger for update:
+DELIMITER //
+
+CREATE TRIGGER after_contact_update
+AFTER UPDATE ON Contact_Info
+FOR EACH ROW
+BEGIN
+    INSERT INTO Change_Log (action_description)
+    VALUES (CONCAT('Updated contact: ID = ', OLD.contactID, ', Old Name = ', OLD.name, ', New Name = ', NEW.name, ', Old Phone = ', OLD.phone, ', New Phone = ', NEW.phone, ', Old Email = ', OLD.email, ', New Email = ', NEW.email));
+END //
+
+DELIMITER ;
+
+
+16.
+sudo mysqldump -u root -p ITIdatabase > /home/ibrahim/Desktop/mydatabase.sql
+
+
+17.
+sudo mysqldump -u root -p ITIdatabase Student> /home/ibrahim/Desktop/mydatabaseStudent.sql
+
+
+18.
+create new database:
+create Database newITIdatabase;
+then:
+$ sudo mysql -u root -p newITIdatabase < /home/ibrahim/Desktop/mydatabase.sql
+
+
+
+
+
